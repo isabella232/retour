@@ -29,7 +29,7 @@ class RetourPlugin extends BasePlugin
         craft()->onException = function (\CExceptionEvent $event) {
             if ((($event->exception instanceof \CHttpException) && ($event->exception->statusCode == 404)) ||
                 (($event->exception->getPrevious() instanceof \CHttpException) && ($event->exception->getPrevious()->statusCode == 404))) {
-                RetourPlugin::log("A 404 exception occurred", LogLevel::Info, false);
+                RetourPlugin::log("A 404 exception occurred", LogLevel::Trace, false);
                 if (craft()->request->isSiteRequest() && !craft()->request->isLivePreview()) {
                     // See if we should redirect
                     $url = urldecode(craft()->request->getRequestUri());
@@ -38,7 +38,7 @@ class RetourPlugin extends BasePlugin
                         $url = UrlHelper::stripQueryString($url);
                     }
                     $noQueryUrl = UrlHelper::stripQueryString($url);
-                    RetourPlugin::log("404 URL: " . $url, LogLevel::Info, false);
+                    RetourPlugin::log("404 URL: " . $url, LogLevel::Trace, false);
 
                     // Redirect if we find a match, otherwise let Craft handle it
                     $redirect = craft()->retour->findRedirectMatch($url);
@@ -46,7 +46,8 @@ class RetourPlugin extends BasePlugin
                     if (isset($redirect)) {
                         craft()->retour->incrementStatistics($url, true);
                         $event->handled = true;
-                        RetourPlugin::log("Redirecting " . $url . " to " . $redirect['redirectDestUrl'], LogLevel::Info, false);
+                        RetourPlugin::log("Redirecting " . $url . " to " . $redirect['redirectDestUrl'], LogLevel::Trace, false);
+                        header('Cache-Control: max-age=3600');
                         craft()->request->redirect($redirect['redirectDestUrl'], true, $redirect['redirectHttpCode']);
                     } else {
                         // Now try it without the query string, too, otherwise let Craft handle it
@@ -55,7 +56,8 @@ class RetourPlugin extends BasePlugin
                         if (isset($redirect)) {
                             craft()->retour->incrementStatistics($url, true);
                             $event->handled = true;
-                            RetourPlugin::log("Redirecting " . $url . " to " . $redirect['redirectDestUrl'], LogLevel::Info, false);
+                            RetourPlugin::log("Redirecting " . $url . " to " . $redirect['redirectDestUrl'], LogLevel::Trace, false);
+                            header('Cache-Control: max-age=3600');
                             craft()->request->redirect($redirect['redirectDestUrl'], true, $redirect['redirectHttpCode']);
                         } else {
                             craft()->retour->incrementStatistics($url, false);
@@ -77,7 +79,7 @@ class RetourPlugin extends BasePlugin
                         $field = craft()->fields->getFieldById($fieldLayout->fieldId);
                         if ($field->type == "Retour") {
                             craft()->elements->saveElement($element);
-                            RetourPlugin::log("Resaved moved structure element", LogLevel::Info, false);
+                            RetourPlugin::log("Resaved moved structure element", LogLevel::Trace, false);
                             break;
                         }
                     }
@@ -180,7 +182,7 @@ class RetourPlugin extends BasePlugin
      */
     public function getVersion()
     {
-        return '1.0.24';
+        return '1.0.25';
     }
 
     /**
