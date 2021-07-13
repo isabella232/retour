@@ -90,13 +90,13 @@ class RetourService extends BaseApplicationComponent
         $urlLocale = $url . $this->getLocale();
         $urlAll = $url . "all";
 
+        // Check the cache for each url ({url}/{locale} {url}/all and {url})
         foreach ([$urlLocale, $urlAll, $url] as $url) {
             $redirect = $this->getRedirectFromCache($url);
             if ($redirect) {
                 $error = $this->incrementRedirectHitCount($redirect);
-                $this->saveRedirectToCache($url, $redirect);
                 RetourPlugin::log("[cached] " . $redirect['redirectMatchType'] . " result: " . print_r($error, true),
-                    LogLevel::Info, false);
+                    LogLevel::Trace, false);
 
                 return $redirect;
             }
@@ -117,10 +117,11 @@ class RetourService extends BaseApplicationComponent
 
         if ($result) {
             if ($result['locale'] == 'all' && !$this->checkCachedRedirectsForEachLocale($url)) {
-                //There's a chance that it found an "all" but
-                //there's also at least one specific match still lurking...
-                //cache those as well, and if it turns out it's actually the
-                //redirect we wanted, use it instead.
+                // There's a chance that it found an "all" but
+                // there's also at least one specific match still lurking...
+                // cache those as well, and if it turns out it's actually the
+                // redirect we wanted, use it instead.
+                // e.g. you visit /showcase/ so /showcase/all/ matches but /showcase/en_au exists
                 $query = craft()->db->createCommand()
                     ->select('*')
                     ->from('retour_static_redirects')
@@ -133,13 +134,13 @@ class RetourService extends BaseApplicationComponent
                     //Again, this can happen if a match was made prematurely
                     if ($specificRedirect['locale'] == $this->getLocale()) {
                         $error = $this->incrementRedirectHitCount($specificRedirect);
-                        RetourPlugin::log($specificRedirect['redirectMatchType'] . " result: " . print_r($error, true), LogLevel::Info, false);
+                        RetourPlugin::log($specificRedirect['redirectMatchType'] . " result: " . print_r($error, true), LogLevel::Trace, false);
                         return $specificRedirect;
                     }
                 }
             }
             $error = $this->incrementRedirectHitCount($result);
-            RetourPlugin::log($result['redirectMatchType'] . " result: " . print_r($error, true), LogLevel::Info, false);
+            RetourPlugin::log($result['redirectMatchType'] . " result: " . print_r($error, true), LogLevel::Trace, false);
 
             return $result;
         }
@@ -172,7 +173,6 @@ class RetourService extends BaseApplicationComponent
     {
         $cacheKey = "retour_cache_" . md5($url);
         $result = craft()->cache->get($cacheKey);
-        RetourPlugin::log("Cached Redirect hit: " . print_r($result, true), LogLevel::Info, false);
 
         return $result;
     }
@@ -207,7 +207,7 @@ class RetourService extends BaseApplicationComponent
     {
         $cacheKey = "retour_cache_" . md5($url);
         $error = craft()->cache->set($cacheKey, $redirect, 0);
-        RetourPlugin::log("Cached Redirect saved: " . print_r($error, true), LogLevel::Info, false);
+        RetourPlugin::log("Cached Redirect saved: " . print_r($error, true), LogLevel::Trace, false);
     }
 
     /**
@@ -294,7 +294,7 @@ class RetourService extends BaseApplicationComponent
                             $result = call_user_func_array(array($plugin, "retourMatch"), $args);
                             if ($result) {
                                 $error = $this->incrementRedirectHitCount($redirect);
-                                RetourPlugin::log($redirectMatchType . " result: " . print_r($error, true), LogLevel::Info, false);
+                                RetourPlugin::log($redirectMatchType . " result: " . print_r($error, true), LogLevel::Trace, false);
                                 $this->saveRedirectToCache($url, $redirect);
 
                                 return $redirect;
@@ -351,14 +351,14 @@ class RetourService extends BaseApplicationComponent
                     'id' => $id,
                 ));
 
-                RetourPlugin::log("Deleted Redirected: " . $id, LogLevel::Info, false);
+                RetourPlugin::log("Deleted Redirect: " . $id, LogLevel::Trace, false);
                 $error = craft()->cache->flush();
-                RetourPlugin::log("Cache flushed: " . print_r($error, true), LogLevel::Info, false);
+                RetourPlugin::log("Cache flushed: " . print_r($error, true), LogLevel::Trace, false);
                 $error = -1;
             } else {
                 if ($record->save()) {
                     $error = craft()->cache->flush();
-                    RetourPlugin::log("Cache flushed: " . print_r($error, true), LogLevel::Info, false);
+                    RetourPlugin::log("Cache flushed: " . print_r($error, true), LogLevel::Trace, false);
                     craft()->userSession->setNotice(Craft::t('Retour Redirect saved.'));
                     $error = "";
 
@@ -372,7 +372,7 @@ class RetourService extends BaseApplicationComponent
                     }
                 } else {
                     $error = $record->getErrors();
-                    RetourPlugin::log(print_r($error, true), LogLevel::Info, false);
+                    RetourPlugin::log(print_r($error, true), LogLevel::Trace, false);
                     craft()->userSession->setError(Craft::t('Couldn’t save Retour Redirect.'));
                 }
             }
@@ -482,7 +482,7 @@ class RetourService extends BaseApplicationComponent
               ) foo
             )
         ")->execute();
-            RetourPlugin::log("Trimmed " . $affectedRows . " from retour_stats table", LogLevel::Info, false);
+            RetourPlugin::log("Trimmed " . $affectedRows . " from retour_stats table", LogLevel::Trace, false);
         }
     }
 
@@ -511,7 +511,7 @@ class RetourService extends BaseApplicationComponent
             } else {
                 $error = $this->createRedirect($redirectsModel);
             }
-            RetourPlugin::log(print_r($error, true), LogLevel::Info, false);
+            RetourPlugin::log(print_r($error, true), LogLevel::Trace, false);
         }
     }
 
@@ -540,7 +540,7 @@ class RetourService extends BaseApplicationComponent
                 $result->setAttributes($redirectsModel->getAttributes(), false);
                 $result->save();
                 $error = $result->getErrors();
-                RetourPlugin::log(print_r($error, true), LogLevel::Info, false);
+                RetourPlugin::log(print_r($error, true), LogLevel::Trace, false);
             }
         }
     }
