@@ -47,7 +47,7 @@ class RetourPlugin extends BasePlugin
                         craft()->retour->incrementStatistics($url, true);
                         $event->handled = true;
                         RetourPlugin::log("Redirecting " . $url . " to " . $redirect['redirectDestUrl'], LogLevel::Trace, false);
-                        header('Cache-Control: max-age=3600');
+                        header('Cache-Control: public, max-age=3600');
                         craft()->request->redirect($redirect['redirectDestUrl'], true, $redirect['redirectHttpCode']);
                     } else {
                         // Now try it without the query string, too, otherwise let Craft handle it
@@ -57,7 +57,7 @@ class RetourPlugin extends BasePlugin
                             craft()->retour->incrementStatistics($url, true);
                             $event->handled = true;
                             RetourPlugin::log("Redirecting " . $url . " to " . $redirect['redirectDestUrl'], LogLevel::Trace, false);
-                            header('Cache-Control: max-age=3600');
+                            header('Cache-Control: public, max-age=3600');
                             craft()->request->redirect($redirect['redirectDestUrl'], true, $redirect['redirectHttpCode']);
                         } else {
                             craft()->retour->incrementStatistics($url, false);
